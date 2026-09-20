@@ -6,6 +6,8 @@ follow [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.0] — 2026-09-20
+
 ### Added
 - Deterministic synthetic LLM usage generator with per-application workload
   profiles (business-hours, night-batch, weekend patterns)
