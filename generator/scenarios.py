@@ -24,12 +24,16 @@ from generator.generate import _COLUMNS
 
 SCENARIOS = ["normal", "cost_spike", "budget_overrun", "multi_anomaly"]
 
+# kind values:
+#   volume_spike | model_switch | output_explosion | error_storm | weekend_surge
+#   sustained_growth | latency_degradation | price_shock
+
 
 class InjectionRecord(BaseModel):
     """Ground truth for one injected anomaly."""
 
     injection_id: str
-    kind: str  # volume_spike | model_switch | output_explosion | error_storm | weekend_surge | sustained_growth
+    kind: str
     application: str
     start_date: date
     end_date: date
@@ -121,6 +125,62 @@ def inject_model_switch(
         magnitude=fraction,
         description=f"{fraction:.0%} of {application} traffic rerouted to {new_model} "
         f"({start} to {end})",
+    )
+    return df, rec
+
+
+def inject_price_shock(
+    df: pd.DataFrame,
+    rng: np.random.Generator,
+    iid: str,
+    application: str,
+    start: date,
+    end: date,
+    new_model: str,
+) -> tuple[pd.DataFrame, InjectionRecord]:
+    """Move ALL of an app's traffic to a pricier model — a provider repricing/
+    forced-upgrade simulation. Volume unchanged; unit cost jumps."""
+    idx = df.index[_day_mask(df, application, start, end)]
+    spec = MODEL_INDEX[new_model]
+    df.loc[idx, "model"] = new_model
+    df.loc[idx, "provider"] = spec.provider
+    df.loc[idx, "latency_ms"] = (df.loc[idx, "latency_ms"] * spec.relative_latency).round(1)
+    df = _recompute(df)
+    rec = InjectionRecord(
+        injection_id=iid,
+        kind="price_shock",
+        application=application,
+        start_date=start,
+        end_date=end,
+        magnitude=1.0,
+        description=f"{application} fully switched to {new_model} ({start} to {end}) — "
+        f"simulated provider repricing; volume unchanged, unit cost jumps",
+    )
+    return df, rec
+
+
+def inject_latency_degradation(
+    df: pd.DataFrame,
+    rng: np.random.Generator,
+    iid: str,
+    application: str,
+    start: date,
+    end: date,
+    factor: float,
+) -> tuple[pd.DataFrame, InjectionRecord]:
+    """Multiply an app's latency in [start, end]. Costs deliberately unchanged —
+    a provider-side degradation that only a latency-aware detector can see."""
+    mask = _day_mask(df, application, start, end)
+    df.loc[mask, "latency_ms"] = (df.loc[mask, "latency_ms"] * factor).round(1)
+    rec = InjectionRecord(
+        injection_id=iid,
+        kind="latency_degradation",
+        application=application,
+        start_date=start,
+        end_date=end,
+        magnitude=factor,
+        description=f"{application} latency ~{factor:.0f}x normal ({start} to {end}); "
+        f"costs unaffected",
     )
     return df, rec
 
@@ -250,6 +310,26 @@ def apply_scenario(
             last_sunday,
             4.0,
             f"app-code unusual weekend usage (~4x) on Sunday {last_sunday}",
+        )
+        records.append(r)
+        df, r = inject_latency_degradation(
+            df,
+            rng,
+            "inj-07",
+            "app-eval",
+            last - timedelta(days=10),
+            last - timedelta(days=8),
+            4.0,
+        )
+        records.append(r)
+        df, r = inject_price_shock(
+            df,
+            rng,
+            "inj-08",
+            "app-extract",
+            last - timedelta(days=6),
+            last - timedelta(days=3),
+            "rapids-xl",
         )
         records.append(r)
 

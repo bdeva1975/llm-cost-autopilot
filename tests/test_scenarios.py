@@ -99,3 +99,34 @@ def test_errors_still_have_zero_output(injected):
     errors = df[df["status"] == "error"]
     assert (errors["output_tokens"] == 0).all()
     assert errors["error_type"].notna().all()
+
+
+def test_latency_degradation_visible(injected):
+    df, recs = injected
+    rec = recs["latency_degradation"]
+    ok = df[(df["application"] == rec.application) & (df["status"] == "success")]
+    d = ok["timestamp"].dt.date
+    daily_lat = ok.groupby(d, observed=True)["latency_ms"].mean()
+    window = [x for x in daily_lat.index if rec.start_date <= x <= rec.end_date]
+    outside = daily_lat.drop(window)
+    assert daily_lat.loc[window].min() > 2.5 * outside.median()
+
+
+def test_latency_degradation_leaves_models_untouched(injected):
+    df, recs = injected
+    rec = recs["latency_degradation"]
+    app = df[df["application"] == rec.application]
+    assert set(app["model"].unique()) == {"rapids-lite"}  # app-eval's only model
+
+
+def test_price_shock_visible(injected):
+    df, recs = injected
+    rec = recs["price_shock"]
+    app = df[df["application"] == rec.application]
+    d = app["timestamp"].dt.date
+    daily_cost = app.groupby(d, observed=True)["total_cost"].sum()
+    window = [x for x in daily_cost.index if rec.start_date <= x <= rec.end_date]
+    outside = daily_cost.drop(window)
+    assert daily_cost.loc[window].min() > 3 * outside.median()
+    inside_rows = app[(d >= rec.start_date) & (d <= rec.end_date)]
+    assert (inside_rows["model"] == "rapids-xl").all()

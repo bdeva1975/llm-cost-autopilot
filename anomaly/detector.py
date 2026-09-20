@@ -1,13 +1,14 @@
 """Statistical anomaly detection on daily per-application metrics.
 
 Approach (deliberately not ML):
-- Metrics per app-day: cost, requests, avg output tokens (successes), error rate.
+- Metrics per app-day: cost, requests, avg output tokens (successes),
+  error rate, avg latency (successes — timeout-inflated errors excluded).
 - Baseline: trailing rolling median, computed separately for weekdays and
   weekends (so weekend traffic is judged against weekend history).
 - Score: robust z from rolling MAD, with per-metric scale floors so that
   near-zero baselines cannot manufacture infinite z-scores.
 - Gate: an app-day metric is anomalous only if z >= z_threshold AND
-  observed/expected >= ratio_threshold. Increases only in v0.1.
+  observed/expected >= ratio_threshold. Increases only in v0.2.
 
 Slow sustained growth (e.g. +35% over weeks) is deliberately out of scope
 here — it is a trend, handled by forecasting and budget tracking, not a spike.
@@ -28,7 +29,7 @@ MIN_HISTORY = 4
 Z_THRESHOLD = 4.0
 RATIO_THRESHOLD = 1.5
 
-METRIC_NAMES = ["cost", "requests", "avg_output_tokens", "error_rate"]
+METRIC_NAMES = ["cost", "requests", "avg_output_tokens", "error_rate", "avg_latency_ms"]
 
 # scale floor = max(MAD, rel * expected, abs) — prevents z explosion on flat series
 _SCALE_FLOORS: dict[str, tuple[float, float]] = {
@@ -36,6 +37,7 @@ _SCALE_FLOORS: dict[str, tuple[float, float]] = {
     "requests": (0.10, 1.0),
     "avg_output_tokens": (0.10, 10.0),
     "error_rate": (0.0, 0.02),
+    "avg_latency_ms": (0.10, 50.0),
 }
 # expected is floored before computing the ratio, so expected≈0 can't yield inf
 _RATIO_FLOORS: dict[str, float] = {
@@ -43,6 +45,7 @@ _RATIO_FLOORS: dict[str, float] = {
     "requests": 1.0,
     "avg_output_tokens": 1.0,
     "error_rate": 0.01,
+    "avg_latency_ms": 50.0,
 }
 
 _ACTIONS: dict[str, str] = {
@@ -50,6 +53,7 @@ _ACTIONS: dict[str, str] = {
     "requests": "Verify whether the demand is legitimate or a runaway client; consider rate limits.",
     "avg_output_tokens": "Inspect prompts and generation parameters (e.g. max_tokens); cap output length.",
     "error_rate": "Investigate provider errors and retry policy; input tokens on failed requests are wasted spend.",
+    "avg_latency_ms": "Investigate provider-side degradation or the model's latency factor; consider failover routing to a faster model.",
 }
 
 
@@ -72,7 +76,7 @@ class Anomaly(BaseModel):
 
 
 def build_daily_metrics(df: pd.DataFrame) -> pd.DataFrame:
-    """Per app-day metric table: cost, requests, avg_output_tokens, error_rate."""
+    """Per app-day metric table: cost, requests, avg_output_tokens, error_rate, avg_latency_ms."""
     tmp = df.assign(date=df["timestamp"].dt.date)
     base = (
         tmp.groupby(["application", "date"], observed=True)
@@ -84,14 +88,17 @@ def build_daily_metrics(df: pd.DataFrame) -> pd.DataFrame:
         .reset_index()
     )
     ok = tmp[tmp["status"] == "success"]
-    avg_out = (
-        ok.groupby(["application", "date"], observed=True)["output_tokens"]
-        .mean()
-        .rename("avg_output_tokens")
+    ok_stats = (
+        ok.groupby(["application", "date"], observed=True)
+        .agg(
+            avg_output_tokens=("output_tokens", "mean"),
+            avg_latency_ms=("latency_ms", "mean"),
+        )
         .reset_index()
     )
-    out = base.merge(avg_out, on=["application", "date"], how="left")
+    out = base.merge(ok_stats, on=["application", "date"], how="left")
     out["avg_output_tokens"] = out["avg_output_tokens"].fillna(0.0)
+    out["avg_latency_ms"] = out["avg_latency_ms"].fillna(0.0)
     out["error_rate"] = out["errors"] / out["requests"]
     return out.drop(columns="errors")
 
@@ -163,6 +170,12 @@ def _cause(df: pd.DataFrame, row: pd.Series, metric: str, ratio: float) -> str:
         return (
             f"{app} average output length was {ratio:.1f}x its trailing baseline on {day} "
             f"({row['avg_output_tokens']:.0f} vs {row['avg_output_tokens_expected']:.0f} tokens)."
+        )
+    if metric == "avg_latency_ms":
+        return (
+            f"{app} average latency was {ratio:.1f}x its trailing baseline on {day} "
+            f"({row['avg_latency_ms']:.0f} ms vs {row['avg_latency_ms_expected']:.0f} ms "
+            f"expected). Cost is unaffected — this is a service-quality anomaly."
         )
     return (
         f"{app} error rate hit {row['error_rate']:.0%} on {day} "
