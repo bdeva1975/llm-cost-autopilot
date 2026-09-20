@@ -1,0 +1,30 @@
+[project]
+name = "llm-cost-autopilot"
+version = "0.1.0"
+description = "An open-source FinOps cockpit that explains, forecasts, and proposes governed actions on LLM spend — running entirely on synthetic data."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Devasish Banerjee" }]
+requires-python = ">=3.12"
+dependencies = [
+    "streamlit>=1.40",
+    "pandas>=2.2",
+    "numpy>=2.0",
+    "plotly>=5.24",
+    "pydantic>=2.9",
+    "scikit-learn>=1.5",
+    "pyarrow>=17.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "ruff>=0.8",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

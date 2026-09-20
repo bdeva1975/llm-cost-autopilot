@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+dist/
+build/
+
+# uv
+uv.lock
+
+# Generated data (demo dataset is whitelisted)
+data/synthetic/*
+!data/synthetic/.gitkeep
+!data/synthetic/demo_*.parquet
+
+# Tooling
+.pytest_cache/
+.ruff_cache/
+.streamlit/secrets.toml
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
