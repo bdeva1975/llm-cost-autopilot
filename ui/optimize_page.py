@@ -53,7 +53,11 @@ def page() -> None:
         with st.expander(label):
             st.markdown(f"**What:** {r.current_state}")
             st.markdown(f"**Change:** {r.recommended_change}")
-            impact = "overspend exposure" if r.category == "budget_control" else "estimated savings / 30d"
+            impact = (
+                "overspend exposure"
+                if r.category == "budget_control"
+                else "estimated savings / 30d"
+            )
             st.markdown(
                 f"**Impact:** ${r.estimated_savings:,.2f} {impact} "
                 f"({r.estimated_percentage_savings:.0%} of the app's window spend)"

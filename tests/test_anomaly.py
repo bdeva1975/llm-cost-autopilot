@@ -111,5 +111,7 @@ def test_empty_dataframe(base):
 
 def test_daily_metrics_shape(base):
     m = build_daily_metrics(base)
-    assert {"application", "date", "cost", "requests", "avg_output_tokens", "error_rate"} <= set(m.columns)
+    assert {"application", "date", "cost", "requests", "avg_output_tokens", "error_rate"} <= set(
+        m.columns
+    )
     assert (m["error_rate"] >= 0).all() and (m["error_rate"] <= 1).all()

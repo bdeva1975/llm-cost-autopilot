@@ -23,11 +23,15 @@ def page() -> None:
     c3.metric("Applications", df["application"].nunique())
     c4.metric("Models", df["model"].nunique())
 
-    tab_data, tab_profiles, tab_truth = st.tabs(["Sample", "Workload profiles", "Injected ground truth"])
+    tab_data, tab_profiles, tab_truth = st.tabs(
+        ["Sample", "Workload profiles", "Injected ground truth"]
+    )
 
     with tab_data:
         n = st.slider("Sample size", 100, 5000, 500, step=100)
-        st.dataframe(df.sample(n, random_state=0).sort_values("timestamp"), width="stretch", hide_index=True)
+        st.dataframe(
+            df.sample(n, random_state=0).sort_values("timestamp"), width="stretch", hide_index=True
+        )
 
     with tab_profiles:
         st.caption("Per-application traffic shapes the generator uses (all fictional).")
@@ -39,7 +43,9 @@ def page() -> None:
     with tab_truth:
         injections = load_injections()
         if injections:
-            st.caption("Anomalies deliberately injected into the demo dataset — the detector's answer key.")
+            st.caption(
+                "Anomalies deliberately injected into the demo dataset — the detector's answer key."
+            )
             st.dataframe(pd.DataFrame(injections), width="stretch", hide_index=True)
         else:
             st.info("No injection log found (dataset was regenerated in memory).")

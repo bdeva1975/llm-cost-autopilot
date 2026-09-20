@@ -58,7 +58,10 @@ def test_budget_control_is_advisory(run):
 
 def test_retry_and_caps_require_approval(run):
     decisions, _ = run
-    for cat, rule in [("retry_optimization", "R4-code-change"), ("token_optimization", "R3-output-shape-change")]:
+    for cat, rule in [
+        ("retry_optimization", "R4-code-change"),
+        ("token_optimization", "R3-output-shape-change"),
+    ]:
         subset = [d for d in decisions if d.category == cat]
         assert subset
         for d in subset:
@@ -69,7 +72,11 @@ def test_retry_and_caps_require_approval(run):
 
 def test_medium_substitution_requires_approval(run):
     decisions, _ = run
-    summ = [d for d in decisions if d.category == "model_substitution" and d.application == "app-summarizer"]
+    summ = [
+        d
+        for d in decisions
+        if d.category == "model_substitution" and d.application == "app-summarizer"
+    ]
     assert summ
     assert all(d.verdict == Verdict.REQUIRES_APPROVAL for d in summ if d.risk == "medium")
 

@@ -30,8 +30,7 @@ def page() -> None:
     )
     apps = st.multiselect("Application", sorted({a.application for a in anomalies}))
     shown = [
-        a for a in anomalies
-        if a.severity in severities and (not apps or a.application in apps)
+        a for a in anomalies if a.severity in severities and (not apps or a.application in apps)
     ]
 
     c1, c2, c3 = st.columns(3)
@@ -40,17 +39,29 @@ def page() -> None:
     c3.metric("Est. total impact", f"${sum(a.impact_usd for a in shown):,.2f}")
 
     timeline = pd.DataFrame(
-        [{"date": a.date, "application": a.application, "severity": a.severity,
-          "impact": max(a.impact_usd, 0.05)} for a in shown]
+        [
+            {
+                "date": a.date,
+                "application": a.application,
+                "severity": a.severity,
+                "impact": max(a.impact_usd, 0.05),
+            }
+            for a in shown
+        ]
     )
     if not timeline.empty:
         fig = px.scatter(
-            timeline, x="date", y="application", size="impact",
+            timeline,
+            x="date",
+            y="application",
+            size="impact",
             color="severity",
             color_discrete_map={"critical": "#d62728", "high": "#ff7f0e", "medium": "#e7c800"},
             size_max=30,
         )
-        fig.update_layout(height=280, margin=dict(l=0, r=0, t=10, b=0), yaxis_title=None, xaxis_title=None)
+        fig.update_layout(
+            height=280, margin=dict(l=0, r=0, t=10, b=0), yaxis_title=None, xaxis_title=None
+        )
         st.plotly_chart(fig, width="stretch")
 
     for a in sorted(shown, key=lambda x: (x.date, x.application), reverse=True):

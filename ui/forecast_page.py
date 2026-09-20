@@ -32,16 +32,16 @@ def page() -> None:
     labels = {("total", "all"): "Organization total"} | {
         (t, s): f"{t}: {s}" for t, s in options if t != "total"
     }
-    scope_type, scope = st.selectbox(
-        "Scope", options, format_func=lambda o: labels[o], index=0
-    )
+    scope_type, scope = st.selectbox("Scope", options, format_func=lambda o: labels[o], index=0)
     f = forecast_month(df, scope_type, scope)
 
     c1, c2, c3, c4 = st.columns(4)
     c1.metric(f"Spend {f.period} (MTD)", f"${f.current_spend:,.2f}")
     c2.metric(
-        "Projected month-end", f"${f.projected_month_end:,.2f}",
-        delta=f"{f.expected_variance:+,.2f} vs ${f.budget:,.0f} budget", delta_color="inverse",
+        "Projected month-end",
+        f"${f.projected_month_end:,.2f}",
+        delta=f"{f.expected_variance:+,.2f} vs ${f.budget:,.0f} budget",
+        delta_color="inverse",
     )
     c3.metric("Forecast utilization", f"{f.forecast_utilization:.0%}" if f.budget > 0 else "n/a")
     c4.metric("Trend", f.trend)
@@ -60,14 +60,25 @@ def page() -> None:
     if f.as_of is not None and f.projected_month_end > f.current_spend:
         month_end = f.as_of.replace(day=28) + timedelta(days=4)
         month_end = month_end - timedelta(days=month_end.day)
-        fig.add_trace(go.Scatter(
-            x=[f.as_of, month_end], y=[f.current_spend, f.projected_month_end],
-            name="Projection", mode="lines", line=dict(dash="dash"),
-        ))
-        fig.add_trace(go.Scatter(
-            x=[month_end, month_end], y=[f.lower_bound, f.upper_bound],
-            name="95% band", mode="lines", line=dict(width=8), opacity=0.4,
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=[f.as_of, month_end],
+                y=[f.current_spend, f.projected_month_end],
+                name="Projection",
+                mode="lines",
+                line=dict(dash="dash"),
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=[month_end, month_end],
+                y=[f.lower_bound, f.upper_bound],
+                name="95% band",
+                mode="lines",
+                line=dict(width=8),
+                opacity=0.4,
+            )
+        )
     if f.budget > 0:
         fig.add_hline(y=f.budget, line_dash="dot", annotation_text=f"budget ${f.budget:,.0f}")
     fig.update_layout(height=380, margin=dict(l=0, r=0, t=10, b=0), yaxis_title="USD (cumulative)")
@@ -77,23 +88,34 @@ def page() -> None:
 
     st.subheader("All scopes at risk")
     risky = [
-        x for x in forecasts
+        x
+        for x in forecasts
         if x.budget > 0 and x.forecast_utilization >= 0.9 and x.method not in ("no_data",)
     ]
     if not risky:
         st.success("No scope is forecast to reach 90% of budget.")
     else:
-        table = pd.DataFrame([
-            {"scope": f"{x.scope_type}: {x.scope}", "budget": x.budget,
-             "projected": x.projected_month_end, "utilization": x.forecast_utilization,
-             "trend": x.trend}
-            for x in risky
-        ]).sort_values("utilization", ascending=False)
+        table = pd.DataFrame(
+            [
+                {
+                    "scope": f"{x.scope_type}: {x.scope}",
+                    "budget": x.budget,
+                    "projected": x.projected_month_end,
+                    "utilization": x.forecast_utilization,
+                    "trend": x.trend,
+                }
+                for x in risky
+            ]
+        ).sort_values("utilization", ascending=False)
         st.dataframe(
-            table, width="stretch", hide_index=True,
+            table,
+            width="stretch",
+            hide_index=True,
             column_config={
                 "budget": st.column_config.NumberColumn(format="$%.2f"),
                 "projected": st.column_config.NumberColumn(format="$%.2f"),
-                "utilization": st.column_config.ProgressColumn(min_value=0.0, max_value=2.0, format="percent"),
+                "utilization": st.column_config.ProgressColumn(
+                    min_value=0.0, max_value=2.0, format="percent"
+                ),
             },
         )

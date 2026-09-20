@@ -55,7 +55,8 @@ def page() -> None:
     c2.metric("Auto-applied (simulated)", len(autos))
     c3.metric("Pending approval", len(pending))
     c4.metric(
-        "Simulated savings", f"${sum(d.simulated_savings or 0 for d in autos):,.2f}",
+        "Simulated savings",
+        f"${sum(d.simulated_savings or 0 for d in autos):,.2f}",
         help="Simulator-verified savings of auto-approved actions over the trailing 30 days.",
     )
 
@@ -73,14 +74,21 @@ def page() -> None:
                     f"**Simulator verification:** ${d.simulated_savings:,.2f} savings "
                     f"(estimate ${d.estimated_savings:,.2f})"
                 )
-            st.caption(f"Risk {d.risk} · confidence {d.confidence:.0%} · from {d.recommendation_id}")
+            st.caption(
+                f"Risk {d.risk} · confidence {d.confidence:.0%} · from {d.recommendation_id}"
+            )
 
             if d.status == DecisionStatus.PENDING_APPROVAL:
                 col1, col2 = st.columns([1, 2])
                 if col1.button("Approve (simulated)", key=f"ok-{d.decision_id}", type="primary"):
                     approve_decision(d, events)
                     st.rerun()
-                reason = col2.text_input("Rejection reason", key=f"why-{d.decision_id}", label_visibility="collapsed", placeholder="Rejection reason (required to reject)")
+                reason = col2.text_input(
+                    "Rejection reason",
+                    key=f"why-{d.decision_id}",
+                    label_visibility="collapsed",
+                    placeholder="Rejection reason (required to reject)",
+                )
                 if col2.button("Reject", key=f"no-{d.decision_id}"):
                     if reason.strip():
                         reject_decision(d, events, reason)
@@ -92,8 +100,22 @@ def page() -> None:
     st.caption("Append-only. Timestamps derive from the dataset's last day, not the wall clock.")
     audit = pd.DataFrame([e.model_dump(mode="json") for e in events])
     st.dataframe(
-        audit[["event_id", "sequence", "as_of", "action", "decision_id", "application",
-               "estimated_savings", "risk", "approval_required", "status", "reason"]],
-        width="stretch", hide_index=True,
+        audit[
+            [
+                "event_id",
+                "sequence",
+                "as_of",
+                "action",
+                "decision_id",
+                "application",
+                "estimated_savings",
+                "risk",
+                "approval_required",
+                "status",
+                "reason",
+            ]
+        ],
+        width="stretch",
+        hide_index=True,
         column_config={"estimated_savings": st.column_config.NumberColumn(format="$%.2f")},
     )

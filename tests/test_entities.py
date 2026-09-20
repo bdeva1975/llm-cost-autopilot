@@ -4,7 +4,7 @@ import pytest
 from pydantic import ValidationError
 
 from config.catalogs import APPLICATION_CATALOG, MODEL_CATALOG, MODEL_INDEX
-from models.entities import ModelSpec, QualityTier
+from models.entities import QualityTier
 
 
 def test_model_names_unique():
@@ -47,11 +47,22 @@ def test_negative_tokens_rejected_by_request_model():
 
     with pytest.raises(ValidationError):
         LLMRequest(
-            request_id="r1", timestamp=datetime(2026, 9, 1), provider="acme",
-            model="atlas-pro", application="app-chat", team="product",
-            environment=Environment.PROD, user_id="u1",
-            input_tokens=-5, output_tokens=10, total_tokens=5, latency_ms=100,
-            status=RequestStatus.SUCCESS, input_cost=0, output_cost=0, total_cost=0,
+            request_id="r1",
+            timestamp=datetime(2026, 9, 1),
+            provider="acme",
+            model="atlas-pro",
+            application="app-chat",
+            team="product",
+            environment=Environment.PROD,
+            user_id="u1",
+            input_tokens=-5,
+            output_tokens=10,
+            total_tokens=5,
+            latency_ms=100,
+            status=RequestStatus.SUCCESS,
+            input_cost=0,
+            output_cost=0,
+            total_cost=0,
         )
 
 

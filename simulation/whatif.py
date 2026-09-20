@@ -116,7 +116,7 @@ def _apply_route(
             f"routing action had no effect."
         )
         return df, 0
-    n = int(round(len(idx) * action.fraction))
+    n = round(len(idx) * action.fraction)
     if n == 0:
         warnings.append(f"Fraction {action.fraction:.0%} selected 0 of {len(idx)} requests.")
         return df, 0
@@ -143,7 +143,9 @@ def _apply_route(
     return df, n
 
 
-def _apply_cap(df: pd.DataFrame, action: CapAction, warnings: list[str]) -> tuple[pd.DataFrame, int]:
+def _apply_cap(
+    df: pd.DataFrame, action: CapAction, warnings: list[str]
+) -> tuple[pd.DataFrame, int]:
     mask = (
         (df["application"] == action.application)
         & (df["status"] == "success")

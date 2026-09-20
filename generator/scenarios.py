@@ -55,7 +55,7 @@ def _recompute(df: pd.DataFrame) -> pd.DataFrame:
 
 def _clone(rows: pd.DataFrame, rng: np.random.Generator, tag: str, copies: float) -> pd.DataFrame:
     """Replicate ~copies x rows with fresh request_ids and jittered timestamps (same day)."""
-    n = int(round(len(rows) * copies))
+    n = round(len(rows) * copies)
     if n == 0 or rows.empty:
         return rows.iloc[0:0]
     picked = rows.sample(n=n, replace=True, random_state=int(rng.integers(0, 2**31))).copy()
@@ -82,8 +82,13 @@ def _amplify(
     """Multiply an application's traffic in [start, end] by ~factor via cloning."""
     extra = _clone(df[_day_mask(df, application, start, end)], rng, iid, factor - 1.0)
     rec = InjectionRecord(
-        injection_id=iid, kind=kind, application=application,
-        start_date=start, end_date=end, magnitude=factor, description=description,
+        injection_id=iid,
+        kind=kind,
+        application=application,
+        start_date=start,
+        end_date=end,
+        magnitude=factor,
+        description=description,
     )
     return pd.concat([df, extra], ignore_index=True), rec
 
@@ -108,8 +113,12 @@ def inject_model_switch(
     df.loc[picked, "latency_ms"] = (df.loc[picked, "latency_ms"] * spec.relative_latency).round(1)
     df = _recompute(df)
     rec = InjectionRecord(
-        injection_id=iid, kind="model_switch", application=application,
-        start_date=start, end_date=end, magnitude=fraction,
+        injection_id=iid,
+        kind="model_switch",
+        application=application,
+        start_date=start,
+        end_date=end,
+        magnitude=fraction,
         description=f"{fraction:.0%} of {application} traffic rerouted to {new_model} "
         f"({start} to {end})",
     )
@@ -124,8 +133,12 @@ def inject_output_explosion(
     df.loc[mask, "output_tokens"] = (df.loc[mask, "output_tokens"] * factor).astype(np.int64)
     df = _recompute(df)
     rec = InjectionRecord(
-        injection_id=iid, kind="output_explosion", application=application,
-        start_date=day, end_date=day, magnitude=factor,
+        injection_id=iid,
+        kind="output_explosion",
+        application=application,
+        start_date=day,
+        end_date=day,
+        magnitude=factor,
         description=f"{application} output tokens ~{factor:.0f}x normal on {day}",
     )
     return df, rec
@@ -151,8 +164,12 @@ def inject_error_storm(
     df = pd.concat([df, retries], ignore_index=True)
     df = _recompute(df)
     rec = InjectionRecord(
-        injection_id=iid, kind="error_storm", application=application,
-        start_date=day, end_date=day, magnitude=error_fraction,
+        injection_id=iid,
+        kind="error_storm",
+        application=application,
+        start_date=day,
+        end_date=day,
+        magnitude=error_fraction,
         description=f"{application} error storm on {day}: ~{error_fraction:.0%} of requests "
         f"failed with ~{retry_copies:.0f}x retries (input tokens billed on every attempt)",
     )
@@ -176,21 +193,39 @@ def apply_scenario(
 
     if scenario in ("cost_spike", "multi_anomaly"):
         df, r = _amplify(
-            df, rng, "inj-01", "volume_spike", "app-chat",
-            last - timedelta(days=4), last - timedelta(days=4), 3.0,
+            df,
+            rng,
+            "inj-01",
+            "volume_spike",
+            "app-chat",
+            last - timedelta(days=4),
+            last - timedelta(days=4),
+            3.0,
             f"app-chat request volume ~3x normal on {last - timedelta(days=4)}",
         )
         records.append(r)
         df, r = inject_model_switch(
-            df, rng, "inj-02", "app-triage",
-            last - timedelta(days=3), last - timedelta(days=2), "atlas-ultra", 0.6,
+            df,
+            rng,
+            "inj-02",
+            "app-triage",
+            last - timedelta(days=3),
+            last - timedelta(days=2),
+            "atlas-ultra",
+            0.6,
         )
         records.append(r)
 
     if scenario in ("budget_overrun", "multi_anomaly"):
         df, r = _amplify(
-            df, rng, "inj-03", "sustained_growth", "app-summarizer",
-            last - timedelta(days=18), last, 1.35,
+            df,
+            rng,
+            "inj-03",
+            "sustained_growth",
+            "app-summarizer",
+            last - timedelta(days=18),
+            last,
+            1.35,
             "app-summarizer sustained ~35% volume growth over the final 19 days "
             "(drives team budget overrun)",
         )
@@ -206,7 +241,14 @@ def apply_scenario(
         )
         records.append(r)
         df, r = _amplify(
-            df, rng, "inj-06", "weekend_surge", "app-code", last_sunday, last_sunday, 4.0,
+            df,
+            rng,
+            "inj-06",
+            "weekend_surge",
+            "app-code",
+            last_sunday,
+            last_sunday,
+            4.0,
             f"app-code unusual weekend usage (~4x) on Sunday {last_sunday}",
         )
         records.append(r)

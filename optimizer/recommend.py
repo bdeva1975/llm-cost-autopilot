@@ -50,7 +50,9 @@ class Recommendation(BaseModel):
     application: str
     current_state: str
     recommended_change: str
-    estimated_savings: float = Field(description="USD over ~30 days; for budget_control this is overspend exposure")
+    estimated_savings: float = Field(
+        description="USD over ~30 days; for budget_control this is overspend exposure"
+    )
     estimated_percentage_savings: float = Field(ge=0, le=1)
     risk: str  # low | medium | high
     confidence: float = Field(ge=0, le=1)

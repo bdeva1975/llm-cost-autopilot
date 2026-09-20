@@ -18,13 +18,8 @@ def page() -> None:
     dmin, dmax = df["timestamp"].min().date(), df["timestamp"].max().date()
     with st.sidebar:
         st.markdown("#### Filters")
-        start, end = st.date_input(
-            "Date range", value=(dmin, dmax), min_value=dmin, max_value=dmax
-        )
-        picks = {
-            dim: st.multiselect(dim, sorted(df[dim].unique()))
-            for dim in DIMENSIONS
-        }
+        start, end = st.date_input("Date range", value=(dmin, dmax), min_value=dmin, max_value=dmax)
+        picks = {dim: st.multiselect(dim, sorted(df[dim].unique())) for dim in DIMENSIONS}
 
     d = df["timestamp"].dt.date
     sub = df[(d >= start) & (d <= end)]
@@ -60,14 +55,25 @@ def page() -> None:
             hide_index=True,
             column_config={
                 "cost": st.column_config.NumberColumn(format="$%.2f"),
-                "share": st.column_config.ProgressColumn(min_value=0.0, max_value=1.0, format="percent"),
+                "share": st.column_config.ProgressColumn(
+                    min_value=0.0, max_value=1.0, format="percent"
+                ),
             },
         )
     with right:
         st.subheader(f"Unit economics by {split}")
         ue = unit_economics(sub, split)
         st.dataframe(
-            ue[[split, "requests", "cost_per_request", "cost_per_1k_tokens", "error_rate", "wasted_cost"]],
+            ue[
+                [
+                    split,
+                    "requests",
+                    "cost_per_request",
+                    "cost_per_1k_tokens",
+                    "error_rate",
+                    "wasted_cost",
+                ]
+            ],
             width="stretch",
             hide_index=True,
             column_config={

@@ -16,7 +16,9 @@ def span(days: int) -> list[date]:
     return [END - timedelta(days=days - 1 - i) for i in range(days)]
 
 
-def make_df(daily: dict[date, float], application: str = "app-chat", team: str = "product") -> pd.DataFrame:
+def make_df(
+    daily: dict[date, float], application: str = "app-chat", team: str = "product"
+) -> pd.DataFrame:
     rows = []
     for i, (d, cost) in enumerate(sorted(daily.items())):
         rows.append(

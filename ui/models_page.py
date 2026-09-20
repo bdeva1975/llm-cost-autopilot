@@ -25,10 +25,16 @@ def page() -> None:
     st.dataframe(
         merged[
             [
-                "model", "provider", "tier",
-                "input_price_per_1m_tokens", "output_price_per_1m_tokens",
-                "relative_quality", "relative_latency",
-                "requests", "cost", "cost_per_1k_tokens",
+                "model",
+                "provider",
+                "tier",
+                "input_price_per_1m_tokens",
+                "output_price_per_1m_tokens",
+                "relative_quality",
+                "relative_latency",
+                "requests",
+                "cost",
+                "cost_per_1k_tokens",
             ]
         ],
         width="stretch",
@@ -54,9 +60,17 @@ def page() -> None:
         st.subheader("Quality vs unit cost (bubble = spend)")
         pts = merged[merged["requests"] > 0]
         fig = px.scatter(
-            pts, x="cost_per_1k_tokens", y="relative_quality",
-            size="cost", color="provider", text="model", size_max=48,
-            labels={"cost_per_1k_tokens": "$/1k tokens (observed)", "relative_quality": "synthetic quality"},
+            pts,
+            x="cost_per_1k_tokens",
+            y="relative_quality",
+            size="cost",
+            color="provider",
+            text="model",
+            size_max=48,
+            labels={
+                "cost_per_1k_tokens": "$/1k tokens (observed)",
+                "relative_quality": "synthetic quality",
+            },
         )
         fig.update_traces(textposition="top center")
         fig.update_layout(height=360, margin=dict(l=0, r=0, t=10, b=0))

@@ -32,9 +32,23 @@ DEFAULT_SEED = 42
 DEFAULT_OUT = Path("data/synthetic/usage.parquet")
 
 _COLUMNS = [
-    "request_id", "timestamp", "provider", "model", "application", "team",
-    "environment", "user_id", "input_tokens", "output_tokens", "total_tokens",
-    "latency_ms", "status", "error_type", "input_cost", "output_cost", "total_cost",
+    "request_id",
+    "timestamp",
+    "provider",
+    "model",
+    "application",
+    "team",
+    "environment",
+    "user_id",
+    "input_tokens",
+    "output_tokens",
+    "total_tokens",
+    "latency_ms",
+    "status",
+    "error_type",
+    "input_cost",
+    "output_cost",
+    "total_cost",
 ]
 
 
@@ -84,7 +98,8 @@ def build_dataset(
                 1, rng.lognormal(np.log(profile.input_tokens_median), profile.input_tokens_sigma, n)
             ).astype(np.int64)
             out_toks = np.maximum(
-                1, rng.lognormal(np.log(profile.output_tokens_median), profile.output_tokens_sigma, n)
+                1,
+                rng.lognormal(np.log(profile.output_tokens_median), profile.output_tokens_sigma, n),
             ).astype(np.int64)
             # Clip so input + output stays inside the model's context window.
             in_toks = np.minimum(in_toks, (ctx[midx] * 0.8).astype(np.int64))

@@ -52,14 +52,21 @@ def page() -> None:
     c3.metric("Budget utilization (forecast)", f"{forecast.forecast_utilization:.0%}")
 
     c4, c5, c6 = st.columns(3)
-    c4.metric("Potential savings / 30d", f"${savings_pool:,.2f}", help="Sum of substitution, token-cap and retry recommendations. Budget exposure excluded to avoid double counting.")
+    c4.metric(
+        "Potential savings / 30d",
+        f"${savings_pool:,.2f}",
+        help="Sum of substitution, token-cap and retry recommendations. Budget exposure excluded to avoid double counting.",
+    )
     c5.metric(f"Anomalies (last {RECENT_DAYS}d)", len(recent))
     c6.metric("Autopilot actions (simulated)", len(autos))
 
     st.subheader("Daily spend by application")
     daily = get_daily_cost(df, "application")
     fig = px.bar(
-        daily, x="date", y="cost", color="application",
+        daily,
+        x="date",
+        y="cost",
+        color="application",
         labels={"date": "", "cost": "USD", "application": "app"},
     )
     fig.update_layout(height=380, margin=dict(l=0, r=0, t=10, b=0), legend_title=None)

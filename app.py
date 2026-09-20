@@ -17,7 +17,9 @@ from ui import (
 st.set_page_config(page_title="LLM Cost Autopilot", page_icon="🛩️", layout="wide")
 
 pages = [
-    st.Page(overview.page, title="Executive Overview", icon="📊", url_path="overview", default=True),
+    st.Page(
+        overview.page, title="Executive Overview", icon="📊", url_path="overview", default=True
+    ),
     st.Page(explorer.page, title="Cost Explorer", icon="🔎", url_path="explorer"),
     st.Page(models_page.page, title="Model Economics", icon="⚖️", url_path="models"),
     st.Page(anomalies_page.page, title="Anomaly Center", icon="🚨", url_path="anomalies"),

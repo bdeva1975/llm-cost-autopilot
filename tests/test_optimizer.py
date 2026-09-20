@@ -19,7 +19,9 @@ def recs(demo):
     return recommend(demo)
 
 
-def by_cat(recs: list[Recommendation], category: str, app: str | None = None) -> list[Recommendation]:
+def by_cat(
+    recs: list[Recommendation], category: str, app: str | None = None
+) -> list[Recommendation]:
     return [r for r in recs if r.category == category and (app is None or r.application == app)]
 
 

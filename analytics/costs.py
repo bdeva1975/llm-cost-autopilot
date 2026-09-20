@@ -34,7 +34,11 @@ def daily_cost(df: pd.DataFrame, by: str | list[str] | None = None) -> pd.DataFr
     tmp = df.assign(date=df["timestamp"].dt.date)
     out = (
         tmp.groupby(["date", *cols], observed=True)
-        .agg(cost=("total_cost", "sum"), requests=("request_id", "count"), tokens=("total_tokens", "sum"))
+        .agg(
+            cost=("total_cost", "sum"),
+            requests=("request_id", "count"),
+            tokens=("total_tokens", "sum"),
+        )
         .reset_index()
         .sort_values(["date", *cols], kind="stable")
         .reset_index(drop=True)
@@ -47,7 +51,11 @@ def cost_breakdown(df: pd.DataFrame, by: str | list[str]) -> pd.DataFrame:
     cols = _by_list(by)
     out = (
         df.groupby(cols, observed=True)
-        .agg(cost=("total_cost", "sum"), requests=("request_id", "count"), tokens=("total_tokens", "sum"))
+        .agg(
+            cost=("total_cost", "sum"),
+            requests=("request_id", "count"),
+            tokens=("total_tokens", "sum"),
+        )
         .reset_index()
         .sort_values("cost", ascending=False, kind="stable")
         .reset_index(drop=True)
@@ -80,7 +88,9 @@ def unit_economics(df: pd.DataFrame, by: str | list[str] | None = None) -> pd.Da
     )
     out["cost_per_request"] = out["cost"] / out["requests"]
     out["cost_per_success"] = np.where(out["successes"] > 0, out["cost"] / out["successes"], np.nan)
-    out["cost_per_1k_tokens"] = np.where(out["tokens"] > 0, out["cost"] / out["tokens"] * 1000, np.nan)
+    out["cost_per_1k_tokens"] = np.where(
+        out["tokens"] > 0, out["cost"] / out["tokens"] * 1000, np.nan
+    )
     out["tokens_per_request"] = out["tokens"] / out["requests"]
     out["error_rate"] = 1.0 - out["successes"] / out["requests"]
     if cols == ["_all"]:

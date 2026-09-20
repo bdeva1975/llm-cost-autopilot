@@ -100,18 +100,33 @@ def forecast_month(
     month_end = Date(year, month, calendar.monthrange(year, month)[1])
 
     def _finish(
-        method: str, current: float, run_rate: float, projected: float,
-        lower: float, upper: float, trend: str,
+        method: str,
+        current: float,
+        run_rate: float,
+        projected: float,
+        lower: float,
+        upper: float,
+        trend: str,
     ) -> Forecast:
         if budget > 0:
             utilization = projected / budget
         else:
             utilization = float("inf") if projected > 0 else 0.0
         return Forecast(
-            scope_type=scope_type, scope=scope, period=period, as_of=as_of, method=method,
-            current_spend=current, daily_run_rate=run_rate, projected_month_end=projected,
-            lower_bound=lower, upper_bound=upper, budget=budget,
-            expected_variance=projected - budget, forecast_utilization=utilization, trend=trend,
+            scope_type=scope_type,
+            scope=scope,
+            period=period,
+            as_of=as_of,
+            method=method,
+            current_spend=current,
+            daily_run_rate=run_rate,
+            projected_month_end=projected,
+            lower_bound=lower,
+            upper_bound=upper,
+            budget=budget,
+            expected_variance=projected - budget,
+            forecast_utilization=utilization,
+            trend=trend,
         )
 
     if sub.empty or as_of is None:
@@ -123,11 +138,7 @@ def forecast_month(
 
     in_month = [d for d in series.index if month_start <= d <= month_end]
     current = float(series.loc[in_month].sum()) if in_month else 0.0
-    remaining = [
-        d.date()
-        for d in pd.date_range(month_start, month_end)
-        if d.date() > as_of
-    ]
+    remaining = [d.date() for d in pd.date_range(month_start, month_end) if d.date() > as_of]
 
     tail = series.tail(lookback)
     run_rate = float(tail.mean()) if len(tail) else 0.0
@@ -158,7 +169,7 @@ def forecast_month(
         mean_val = float(series.mean())
         resid_std = float(series.std(ddof=1)) if len(series) > 1 else 0.0
 
-        def predict(d: Date) -> float:  # noqa: ARG001
+        def predict(d: Date) -> float:
             return max(mean_val, 0.0)
 
         trend = "unknown"

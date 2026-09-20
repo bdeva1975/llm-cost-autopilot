@@ -76,8 +76,11 @@ def build_daily_metrics(df: pd.DataFrame) -> pd.DataFrame:
     tmp = df.assign(date=df["timestamp"].dt.date)
     base = (
         tmp.groupby(["application", "date"], observed=True)
-        .agg(cost=("total_cost", "sum"), requests=("request_id", "count"),
-             errors=("status", lambda s: (s == "error").sum()))
+        .agg(
+            cost=("total_cost", "sum"),
+            requests=("request_id", "count"),
+            errors=("status", lambda s: (s == "error").sum()),
+        )
         .reset_index()
     )
     ok = tmp[tmp["status"] == "success"]

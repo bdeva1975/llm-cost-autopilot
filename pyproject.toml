@@ -26,5 +26,11 @@ dev = [
 line-length = 100
 target-version = "py312"
 
+[tool.ruff.lint]
+ignore = [
+    "DTZ001",  # synthetic dataset is deliberately tz-naive; timezone handling is a non-goal
+    "C408",    # dict(l=0, r=0, ...) is the idiomatic Plotly margin/line style
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
