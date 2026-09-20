@@ -7,8 +7,9 @@ action is a simulation against the synthetic dataset, and statuses say so
 explicitly (auto_applied_simulated, approved_simulated).
 
 Governance model:
-- A small, explicit, ordered policy (POLICY_RULES) maps each recommendation
-  to a verdict: AUTO_APPROVE, REQUIRES_APPROVAL, or DO_NOT_AUTOMATE.
+- The auto-approval gate is configurable via config/policy.yaml
+  (autopilot/policy.py); the category -> verdict mapping is fixed in code
+  deliberately (see policy.py's docstring).
 - Auto-approved substitutions are verified through the what-if simulator;
   the simulated savings are recorded next to the estimate.
 - Every decision and status change produces an append-only, JSON-serializable
@@ -24,11 +25,9 @@ from enum import StrEnum
 import pandas as pd
 from pydantic import BaseModel, Field
 
+from autopilot.policy import PolicyConfig, load_policy, policy_rules, risk_within
 from optimizer.recommend import Recommendation, recommend
 from simulation.whatif import RouteAction, simulate
-
-AUTO_MIN_SAVINGS = 0.5
-AUTO_MIN_CONFIDENCE = 0.6
 
 
 class Verdict(StrEnum):
@@ -45,26 +44,8 @@ class DecisionStatus(StrEnum):
     ADVISORY = "advisory"
 
 
-# (rule_id, human-readable policy statement) — shown verbatim in the UI.
-POLICY_RULES: list[tuple[str, str]] = [
-    (
-        "R1-low-risk-routing",
-        (
-            f"Model substitution with LOW quality risk, estimated savings >= ${AUTO_MIN_SAVINGS:.2f}/30d "
-            f"and confidence >= {AUTO_MIN_CONFIDENCE:.0%} is auto-approved (simulated)."
-        ),
-    ),
-    ("R2-routing-needs-review", "Any other model substitution requires human approval."),
-    (
-        "R3-output-shape-change",
-        "Output-token caps change response shape; they always require human approval.",
-    ),
-    (
-        "R4-code-change",
-        "Retry/backoff optimizations are code changes; they always require human approval.",
-    ),
-    ("R5-budget-is-human", "Budget decisions are never automated; they are advisory only."),
-]
+# Rule list under the default (committed) policy — shown verbatim in the UI.
+POLICY_RULES: list[tuple[str, str]] = policy_rules(load_policy())
 
 
 class AutopilotDecision(BaseModel):
@@ -102,7 +83,7 @@ class AuditEvent(BaseModel):
     status: str
 
 
-def _classify(rec: Recommendation) -> tuple[Verdict, str, str]:
+def _classify(rec: Recommendation, policy: PolicyConfig) -> tuple[Verdict, str, str]:
     """Map a recommendation to (verdict, rule_id, reason). Order mirrors POLICY_RULES."""
     if rec.category == "budget_control":
         return (
@@ -123,10 +104,11 @@ def _classify(rec: Recommendation) -> tuple[Verdict, str, str]:
             "Capping output tokens can truncate responses; a human must confirm it is safe.",
         )
     # model_substitution
+    aa = policy.auto_approve
     if (
-        rec.risk == "low"
-        and rec.estimated_savings >= AUTO_MIN_SAVINGS
-        and rec.confidence >= AUTO_MIN_CONFIDENCE
+        risk_within(rec.risk, aa.max_quality_risk)
+        and rec.estimated_savings >= aa.min_savings_usd_30d
+        and rec.confidence >= aa.min_confidence
         and rec.from_model is not None
         and rec.to_model is not None
     ):
@@ -134,8 +116,9 @@ def _classify(rec: Recommendation) -> tuple[Verdict, str, str]:
             Verdict.AUTO_APPROVE,
             "R1-low-risk-routing",
             (
-                f"Low quality risk, ${rec.estimated_savings:.2f}/30d savings and "
-                f"{rec.confidence:.0%} confidence clear the auto-approval bar."
+                f"Quality risk '{rec.risk}' within '{aa.max_quality_risk}', "
+                f"${rec.estimated_savings:.2f}/30d savings and {rec.confidence:.0%} confidence "
+                f"clear the auto-approval bar."
             ),
         )
     return (
@@ -178,18 +161,21 @@ def run_autopilot(
     df: pd.DataFrame,
     recs: list[Recommendation] | None = None,
     seed: int = 7,
+    policy: PolicyConfig | None = None,
 ) -> tuple[list[AutopilotDecision], list[AuditEvent]]:
     """Evaluate recommendations under the policy. Deterministic."""
     if df.empty:
         return [], []
     if recs is None:
         recs = recommend(df)
+    if policy is None:
+        policy = load_policy()
     as_of: Date = df["timestamp"].max().date()
 
     decisions: list[AutopilotDecision] = []
     events: list[AuditEvent] = []
     for i, rec in enumerate(recs, start=1):
-        verdict, rule, reason = _classify(rec)
+        verdict, rule, reason = _classify(rec, policy)
         if verdict == Verdict.AUTO_APPROVE:
             status = DecisionStatus.AUTO_APPLIED_SIMULATED
         elif verdict == Verdict.REQUIRES_APPROVAL:

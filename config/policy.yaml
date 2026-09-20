@@ -1,0 +1,16 @@
+# Autopilot policy configuration.
+#
+# Only the auto-approval gate is configurable. The category -> verdict mapping
+# (token caps and retry fixes require approval; budget decisions are never
+# automated) is fixed in code deliberately: those are safety judgments, not
+# tuning knobs. See autopilot/policy.py for the schema and docs/autopilot.md
+# for the reasoning.
+
+version: 1
+
+auto_approve:
+  # Only model_substitution recommendations are eligible for auto-approval.
+  # A recommendation is auto-approved (simulated) when ALL hold:
+  max_quality_risk: low      # low | medium  (high is never auto-approvable)
+  min_savings_usd_30d: 0.50  # estimated savings over the trailing 30 days
+  min_confidence: 0.60       # 0..1
