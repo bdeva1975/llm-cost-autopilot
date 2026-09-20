@@ -55,6 +55,10 @@ class Recommendation(BaseModel):
     risk: str  # low | medium | high
     confidence: float = Field(ge=0, le=1)
     rationale: str
+    # Structured action parameters (consumed by the autopilot; None where not applicable).
+    from_model: str | None = None
+    to_model: str | None = None
+    cap_output_tokens: int | None = None
 
 
 def _window(df: pd.DataFrame) -> pd.DataFrame:
@@ -121,6 +125,8 @@ def _substitutions(win: pd.DataFrame) -> list[Recommendation]:
                     f"covers the workload's p99 of {p99_tokens:,.0f} tokens. Assumes identical "
                     f"behaviour on the candidate model."
                 ),
+                from_model=model,
+                to_model=cand.model,
             )
         )
     return out
@@ -161,6 +167,7 @@ def _token_caps(win: pd.DataFrame) -> list[Recommendation]:
                     f"beyond the cap are truncatable or promptable to shorter form; not valid "
                     f"for workloads where long outputs are the product."
                 ),
+                cap_output_tokens=cap,
             )
         )
     return out
