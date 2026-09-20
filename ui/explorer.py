@@ -73,7 +73,7 @@ def page() -> None:
             column_config={
                 "cost_per_request": st.column_config.NumberColumn(format="$%.4f"),
                 "cost_per_1k_tokens": st.column_config.NumberColumn(format="$%.4f"),
-                "error_rate": st.column_config.NumberColumn(format="%.1%%"),
+                "error_rate": st.column_config.NumberColumn(format="percent"),
                 "wasted_cost": st.column_config.NumberColumn(format="$%.2f"),
             },
         )
