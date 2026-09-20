@@ -36,7 +36,7 @@ MIN_WORKLOAD_COST = 0.25  # ignore (app, model) workloads below this in the wind
 MAX_QUALITY_DROP = 10.0
 LOW_RISK_DROP = 4.0
 HEAVY_TAIL_RATIO = 3.0  # p95/median beyond which outputs count as heavy-tailed
-CAP_MULTIPLier = 3.0
+CAP_MULTIPLIER = 3.0
 MIN_SAVINGS = 0.25
 RECOVERABLE_FRACTION = 0.7
 BUDGET_ATTENTION = 0.9
@@ -134,7 +134,7 @@ def _token_caps(win: pd.DataFrame) -> list[Recommendation]:
         p95 = float(g["output_tokens"].quantile(0.95))
         if med <= 0 or p95 < HEAVY_TAIL_RATIO * med:
             continue
-        cap = int(CAP_MULTIPLier * med)
+        cap = int(CAP_MULTIPLIER * med)
         excess = (g["output_tokens"] - cap).clip(lower=0)
         price = g["model"].map({m: s.output_price_per_1m_tokens for m, s in MODEL_INDEX.items()})
         savings = float((excess * price).sum() / 1e6)
