@@ -1,0 +1,56 @@
+[
+  {
+    "injection_id": "inj-01",
+    "kind": "volume_spike",
+    "application": "app-chat",
+    "start_date": "2026-09-15",
+    "end_date": "2026-09-15",
+    "magnitude": 3.0,
+    "description": "app-chat request volume ~3x normal on 2026-09-15"
+  },
+  {
+    "injection_id": "inj-02",
+    "kind": "model_switch",
+    "application": "app-triage",
+    "start_date": "2026-09-16",
+    "end_date": "2026-09-17",
+    "magnitude": 0.6,
+    "description": "60% of app-triage traffic rerouted to atlas-ultra (2026-09-16 to 2026-09-17)"
+  },
+  {
+    "injection_id": "inj-03",
+    "kind": "sustained_growth",
+    "application": "app-summarizer",
+    "start_date": "2026-09-01",
+    "end_date": "2026-09-19",
+    "magnitude": 1.35,
+    "description": "app-summarizer sustained ~35% volume growth over the final 19 days (drives team budget overrun)"
+  },
+  {
+    "injection_id": "inj-04",
+    "kind": "output_explosion",
+    "application": "app-marketing",
+    "start_date": "2026-09-11",
+    "end_date": "2026-09-11",
+    "magnitude": 6.0,
+    "description": "app-marketing output tokens ~6x normal on 2026-09-11"
+  },
+  {
+    "injection_id": "inj-05",
+    "kind": "error_storm",
+    "application": "app-rag",
+    "start_date": "2026-09-14",
+    "end_date": "2026-09-14",
+    "magnitude": 0.25,
+    "description": "app-rag error storm on 2026-09-14: ~25% of requests failed with ~2x retries (input tokens billed on every attempt)"
+  },
+  {
+    "injection_id": "inj-06",
+    "kind": "weekend_surge",
+    "application": "app-code",
+    "start_date": "2026-09-13",
+    "end_date": "2026-09-13",
+    "magnitude": 4.0,
+    "description": "app-code unusual weekend usage (~4x) on Sunday 2026-09-13"
+  }
+]

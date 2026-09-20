@@ -13,6 +13,7 @@ uv.lock
 data/synthetic/*
 !data/synthetic/.gitkeep
 !data/synthetic/demo_*.parquet
+!data/synthetic/demo_injections.json
 
 # Tooling
 .pytest_cache/
