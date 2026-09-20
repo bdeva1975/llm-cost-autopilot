@@ -74,6 +74,24 @@ def test_weekend_surge_detected(anomalies, demo):
     assert hits
 
 
+def test_latency_degradation_detected(anomalies, demo):
+    _, recs = demo
+    rec = recs["latency_degradation"]
+    hits = _find(anomalies, rec.application, rec.start_date, rec.end_date)
+    assert hits
+    assert any("avg_latency_ms" in a.metrics for a in hits)
+    lat = next(a for a in hits if "avg_latency_ms" in a.metrics)
+    assert "latency" in lat.possible_cause.lower()
+
+
+def test_price_shock_detected_and_names_model(anomalies, demo):
+    _, recs = demo
+    rec = recs["price_shock"]
+    hits = _find(anomalies, rec.application, rec.start_date, rec.end_date)
+    assert hits
+    assert any(a.primary_metric == "cost" and "rapids-xl" in a.possible_cause for a in hits)
+
+
 def test_sustained_growth_not_flagged_as_spike(anomalies, demo):
     # Deliberate: slow growth belongs to forecasting/budget, not spike detection.
     _, recs = demo
@@ -111,7 +129,14 @@ def test_empty_dataframe(base):
 
 def test_daily_metrics_shape(base):
     m = build_daily_metrics(base)
-    assert {"application", "date", "cost", "requests", "avg_output_tokens", "error_rate"} <= set(
-        m.columns
-    )
+    assert {
+        "application",
+        "date",
+        "cost",
+        "requests",
+        "avg_output_tokens",
+        "error_rate",
+        "avg_latency_ms",
+    } <= set(m.columns)
     assert (m["error_rate"] >= 0).all() and (m["error_rate"] <= 1).all()
+    assert (m["avg_latency_ms"] >= 0).all()

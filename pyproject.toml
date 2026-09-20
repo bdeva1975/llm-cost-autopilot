@@ -1,6 +1,6 @@
 [project]
 name = "llm-cost-autopilot"
-version = "0.1.0"
+version = "0.2.0"
 description = "An open-source FinOps cockpit that explains, forecasts, and proposes governed actions on LLM spend — running entirely on synthetic data."
 readme = "README.md"
 license = { text = "MIT" }
@@ -14,6 +14,7 @@ dependencies = [
     "pydantic>=2.9",
     "scikit-learn>=1.5",
     "pyarrow>=17.0",
+    "pyyaml>=6.0",
 ]
 
 [dependency-groups]

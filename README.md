@@ -1,6 +1,6 @@
-﻿# ðŸ›©ï¸ LLM Cost Autopilot
+﻿# 🛩️ LLM Cost Autopilot
 
-**An open-source FinOps cockpit that doesn't just show your LLM spend â€” it
+**An open-source FinOps cockpit that doesn't just show your LLM spend — it
 explains it, forecasts it, and proposes governed actions to cut it.**
 
 Runs entirely on synthetic data. No API keys, no cloud, no Docker.
@@ -27,10 +27,10 @@ There is no lightweight, runnable reference for what the **full FinOps loop**
 looks like:
 
 ```
-OBSERVE â†’ ANALYZE â†’ DETECT â†’ PREDICT â†’ RECOMMEND â†’ SIMULATE â†’ GOVERN â†’ AUTOMATE
+OBSERVE → ANALYZE → DETECT → PREDICT → RECOMMEND → SIMULATE → GOVERN → AUTOMATE
 ```
 
-This repository is that reference â€” small enough to read in an afternoon,
+This repository is that reference — small enough to read in an afternoon,
 honest about every assumption, and safe to run anywhere because the entire
 environment is synthetic.
 
@@ -39,21 +39,28 @@ environment is synthetic.
 Most cost tools stop at charts. The interesting engineering here is the back
 half of the loop:
 
-1. **Explainable anomaly detection** â€” robust z-scores against weekday/weekend
-   baselines, no ML. Every flag reads like a sentence: *"app-triage spent 17.9Ã—
+1. **Explainable anomaly detection** — robust z-scores against weekday/weekend
+   baselines across five metrics (cost, volume, output length, error rate,
+   latency), no ML. Every flag reads like a sentence: *"app-triage spent 17.9×
    its trailing baseline on Sep 17. 96% of the increase came from atlas-ultra."*
-2. **What-if simulation** â€” counterfactual repricing of the trailing 30 days.
+2. **What-if simulation** — counterfactual repricing of the trailing 30 days.
    *"Move 100% of the summarizer from the frontier model to the mid-tier one"*
-   â†’ exact savings, quality shift, latency shift, context-window warnings.
-3. **A governed autopilot** â€” five ordered policy rules classify every
-   recommendation as `AUTO_APPROVE`, `REQUIRES_APPROVAL`, or `DO_NOT_AUTOMATE`.
-   Auto-approved actions are re-verified through the simulator, humans approve
-   or reject the rest (rejections require a reason), and everything lands in an
-   append-only audit trail.
+   → exact savings, quality shift, latency shift, context-window warnings.
+3. **A governed autopilot** — ordered policy rules (configurable via YAML)
+   classify every recommendation as `AUTO_APPROVE`, `REQUIRES_APPROVAL`, or
+   `DO_NOT_AUTOMATE`. Auto-approved actions are re-verified through the
+   simulator, humans approve or reject the rest (rejections require a reason),
+   and everything lands in an append-only audit trail.
+4. **Conditioned approvals** — an approval is a predicate, not a signature.
+   Every approval records the conditions it was granted under (expiry, exact
+   action, risk ceiling, savings floor, simulator-verified savings) and is
+   revalidated against current data; failed guards mark it **STALE**, and a
+   stale approval can only be re-approved together with the data that
+   revalidates it. A swap approved in July never silently runs in October.
 
-The governance part is what enterprises actually struggle with â€” who approves
-a model swap? what's safe to automate? â€” and it's the part this project
-demonstrates end to end.
+The governance part is what enterprises actually struggle with — who approves
+a model swap? what's safe to automate? does the approval still hold? — and
+it's the part this project demonstrates end to end.
 
 ## Honesty rules
 
@@ -66,7 +73,7 @@ demonstrates end to end.
   arithmetic and policy evaluation. There is no LLM inside the tool.
 - **Deterministic.** Same seed, same dataset, same detections, same decisions.
   The demo dataset ships with a logged ground-truth file of every injected
-  anomaly â€” the detector is tested against its own answer key.
+  anomaly (8 of them) — the detector is tested against its own answer key.
 
 ## The pages
 
@@ -79,7 +86,7 @@ demonstrates end to end.
 | Forecast | What will month-end look like vs budget? |
 | Optimization Center | Ranked savings opportunities with risk and confidence |
 | What-If Simulator | What happens if I reroute / cap this workload? |
-| Autopilot | Governed decisions, approvals, audit trail |
+| Autopilot | Governed decisions, conditioned approvals, revalidation, audit trail |
 | Data Explorer | The synthetic dataset itself, profiles and ground truth |
 
 ## Architecture
@@ -91,16 +98,24 @@ anomaly/     statistical detection with plain-language causes
 forecasting/ month-end projection vs budget
 optimizer/   substitution, token caps, retry waste, budget exposure
 simulation/  composable counterfactual repricing
-autopilot/   policy engine, approvals, audit trail
+autopilot/   policy engine, conditioned approvals, revalidation, audit trail
 ui/          Streamlit pages (thin; all logic lives above)
-config/      fictional model + application catalogs
+config/      fictional model + application catalogs, policy.yaml
 models/      Pydantic entities
-tests/       105 tests, validated against injected ground truth
+tests/       135 tests, validated against injected ground truth
 ```
 
-Data flows one way: `generator â†’ parquet â†’ engines â†’ UI`. Engines are pure
+Data flows one way: `generator → parquet → engines → UI`. Engines are pure
 functions over the request DataFrame; the UI only renders. Details in
 [docs/architecture.md](docs/architecture.md).
+
+## Configuring the policy
+
+`config/policy.yaml` controls the auto-approval gate (risk ceiling, savings
+floor, confidence threshold) and the approval lifetime. The category → verdict
+mapping stays in code deliberately: letting YAML auto-approve output-shape
+changes, code changes or budget decisions would turn a guardrail into a
+footgun. See [docs/autopilot.md](docs/autopilot.md).
 
 ## Regenerating data
 
@@ -110,14 +125,14 @@ uv run python -m generator.generate --days 50       # clean base traffic
 uv run python -m generator.generate --scale medium  # 10x volume
 ```
 
-Scenarios: `normal`, `cost_spike`, `budget_overrun`, `multi_anomaly` â€” see
+Scenarios: `normal`, `cost_spike`, `budget_overrun`, `multi_anomaly` — see
 `generator/scenarios.py`.
 
 ## Development
 
 ```bash
 uv sync
-uv run pytest -q            # 105 tests
+uv run pytest -q            # 135 tests
 uv run ruff check .
 uv run ruff format .
 ```
@@ -129,17 +144,18 @@ Python 3.12+. Plain pip works: `pip install -r requirements.txt`.
 The core is provider-agnostic by design: everything downstream of the parquet
 file only needs the request schema in `models/entities.py`. A future
 `UsageProvider` interface (OpenAI, Anthropic, Bedrock, Azure, LiteLLM, custom
-gateways) plugs in at ingestion without touching the engines â€” see
+gateways) plugs in at ingestion without touching the engines — see
 [docs/architecture.md](docs/architecture.md#extension-points).
 
 ## Roadmap
 
-- **v0.1** â€” everything above
-- **v0.2** â€” configurable policy rules (YAML), richer scenario library,
-  per-workload routing recommendations
-- **v0.3** â€” `UsageProvider` interface + first real adapter (opt-in),
-  cost-per-business-transaction modelling
-- **v1.0** â€” pluggable detectors, multi-currency, exportable reports
+- **v0.1** — full loop on synthetic data (shipped)
+- **v0.2** — conditioned approvals with revalidation, YAML-configurable
+  policy, latency-aware detection, richer scenario library (shipped)
+- **v0.3** — per-workload split-routing recommendations, `UsageProvider`
+  interface + first real adapter (opt-in), cost-per-business-transaction
+  modelling
+- **v1.0** — pluggable detectors, multi-currency, exportable reports
 
 ## Contributing
 

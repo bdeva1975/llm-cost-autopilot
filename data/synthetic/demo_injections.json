@@ -52,5 +52,23 @@
     "end_date": "2026-09-13",
     "magnitude": 4.0,
     "description": "app-code unusual weekend usage (~4x) on Sunday 2026-09-13"
+  },
+  {
+    "injection_id": "inj-07",
+    "kind": "latency_degradation",
+    "application": "app-eval",
+    "start_date": "2026-09-09",
+    "end_date": "2026-09-11",
+    "magnitude": 4.0,
+    "description": "app-eval latency ~4x normal (2026-09-09 to 2026-09-11); costs unaffected"
+  },
+  {
+    "injection_id": "inj-08",
+    "kind": "price_shock",
+    "application": "app-extract",
+    "start_date": "2026-09-13",
+    "end_date": "2026-09-16",
+    "magnitude": 1.0,
+    "description": "app-extract fully switched to rapids-xl (2026-09-13 to 2026-09-16) \u2014 simulated provider repricing; volume unchanged, unit cost jumps"
   }
 ]
