@@ -1,24 +1,50 @@
-# LLM Cost Autopilot
+# Contributing
 
-An open-source FinOps cockpit that doesn't just show your LLM spend — it
-explains it, forecasts it, and proposes governed actions to cut it.
-Runs entirely on synthetic data. No API keys, no cloud, no Docker.
+Thanks for considering a contribution.
 
-> 🚧 Work in progress — v0.1 under construction.
+## Setup
 
-## Quick start
+```bash
+git clone https://github.com/bdeva1975/llm-cost-autopilot.git
+cd llm-cost-autopilot
+uv sync
+uv run pytest -q          # 105 tests should pass
+uv run streamlit run app.py
+```
 
-    git clone https://github.com/bdeva1975/llm-cost-autopilot.git
-    cd llm-cost-autopilot
-    uv sync
-    uv run streamlit run app.py
+Plain pip works too: `pip install -r requirements.txt` (Python 3.12+).
 
-Or with plain pip:
+## Before opening a PR
 
-    python -m venv .venv && .venv\Scripts\activate
-    pip install -r requirements.txt
-    streamlit run app.py
+```bash
+uv run ruff check .
+uv run ruff format .
+uv run pytest -q
+```
 
-## License
+CI runs the same three commands plus a demo-dataset reproducibility check.
 
-MIT
+## Ground rules
+
+- **Synthetic only.** No real provider names, prices, or API calls in core modules.
+  Real-provider adapters belong behind the future `UsageProvider` interface.
+- **Explainability is a feature.** Anomalies and recommendations must state
+  WHAT / WHY / IMPACT / ACTION / RISK / CONFIDENCE in plain language.
+- **Determinism.** Anything random takes a seed and produces identical output
+  for identical inputs. Tests enforce this.
+- **Honest labels.** Simulated things say "simulated". Assumptions say
+  "assumption". Do not add ML where arithmetic answers the question.
+- New intelligence (detectors, optimizers, policies) needs tests against the
+  injected ground truth in `generator/scenarios.py`, or new injections.
+
+## Good first contributions
+
+- New anomaly injectors + matching detector coverage
+- New optimization categories (with honest assumptions)
+- A `UsageProvider` adapter design for real providers
+- UI polish that doesn't add dependencies
+
+## Reporting bugs
+
+Open an issue with: what you ran, what you expected, what happened, and your
+Python/OS versions. The dataset is deterministic, so most bugs reproduce exactly.
