@@ -85,11 +85,11 @@ def test_unit_economics_all_errors_gives_nan_cps():
 
 
 def test_budget_status_thresholds():
-    # app-marketing budget = 800 → 700 spend = 0.875 → warning
-    # app-eval budget = 600 → 900 spend = 1.5 → critical
+    # app-marketing budget = 10 -> 8.5 spend = 0.85 -> warning
+    # app-eval budget = 1 -> 1.5 spend = 1.5 -> critical
     df = tiny([
-        {"application": "app-marketing", "team": "marketing", "total_cost": 700.0},
-        {"application": "app-eval", "team": "platform", "total_cost": 900.0},
+        {"application": "app-marketing", "team": "marketing", "total_cost": 8.5},
+        {"application": "app-eval", "team": "platform", "total_cost": 1.5},
     ])
     out = application_budget_status(df, "2026-09").set_index("application")
     assert out.loc["app-marketing", "status"] == "warning"
@@ -105,10 +105,10 @@ def test_budget_period_filter():
 
 
 def test_team_budget_aggregates_apps():
-    # platform = app-rag 4500 + app-code 3000 + app-eval 600 = 8100
-    df = tiny([{"application": "app-eval", "team": "platform", "total_cost": 8100.0}])
+    # platform = app-rag 95 + app-code 75 + app-eval 1 = 171
+    df = tiny([{"application": "app-eval", "team": "platform", "total_cost": 171.0}])
     out = team_budget_status(df, "2026-09").set_index("team")
-    assert out.loc["platform", "budget"] == pytest.approx(8100.0)
+    assert out.loc["platform", "budget"] == pytest.approx(171.0)
     assert out.loc["platform", "status"] == "critical"
 
 

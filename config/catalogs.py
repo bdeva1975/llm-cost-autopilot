@@ -2,6 +2,10 @@
 
 Everything here is fictional. Prices, quality scores and latency factors are
 invented for demonstration and do not correspond to any real provider.
+
+Monthly budgets are calibrated to the *small*-scale demo dataset (tens of
+dollars per month), so budget warnings and overruns actually occur in the
+committed demo data.
 """
 
 from __future__ import annotations
@@ -58,42 +62,42 @@ APPLICATION_CATALOG: list[Application] = [
     Application(
         application_id="app-chat", application_name="Customer Chatbot", team="product",
         environment=Environment.PROD, business_function="customer_support",
-        monthly_budget=6_000, preferred_model="atlas-pro",
+        monthly_budget=28, preferred_model="atlas-pro",
     ),
     Application(
         application_id="app-rag", application_name="Knowledge Search (RAG)", team="platform",
         environment=Environment.PROD, business_function="internal_search",
-        monthly_budget=4_500, preferred_model="polaris-large",
+        monthly_budget=95, preferred_model="polaris-large",
     ),
     Application(
         application_id="app-summarizer", application_name="Document Summarizer", team="data",
         environment=Environment.PROD, business_function="document_processing",
-        monthly_budget=2_500, preferred_model="atlas-ultra",  # deliberate misuse: frontier model on simple workload
+        monthly_budget=80, preferred_model="atlas-ultra",  # deliberate misuse: frontier model on simple workload
     ),
     Application(
         application_id="app-code", application_name="Code Assistant", team="platform",
         environment=Environment.PROD, business_function="developer_productivity",
-        monthly_budget=3_000, preferred_model="atlas-pro",
+        monthly_budget=75, preferred_model="atlas-pro",
     ),
     Application(
         application_id="app-extract", application_name="Extraction Pipeline", team="data",
         environment=Environment.PROD, business_function="etl",
-        monthly_budget=1_500, preferred_model="rapids-base",
+        monthly_budget=4, preferred_model="rapids-base",
     ),
     Application(
         application_id="app-triage", application_name="Support Ticket Triage", team="support",
         environment=Environment.PROD, business_function="customer_support",
-        monthly_budget=1_200, preferred_model="polaris-small",
+        monthly_budget=2, preferred_model="polaris-small",
     ),
     Application(
         application_id="app-marketing", application_name="Marketing Copy Generator", team="marketing",
         environment=Environment.PROD, business_function="content_generation",
-        monthly_budget=800, preferred_model="rapids-xl",
+        monthly_budget=10, preferred_model="rapids-xl",
     ),
     Application(
         application_id="app-eval", application_name="QA Eval Harness", team="platform",
         environment=Environment.DEV, business_function="quality_assurance",
-        monthly_budget=600, preferred_model="rapids-lite",
+        monthly_budget=1, preferred_model="rapids-lite",
     ),
 ]
 
