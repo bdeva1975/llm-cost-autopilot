@@ -1,6 +1,6 @@
-# 🛩️ LLM Cost Autopilot
+﻿# ðŸ›©ï¸ LLM Cost Autopilot
 
-**An open-source FinOps cockpit that doesn't just show your LLM spend — it
+**An open-source FinOps cockpit that doesn't just show your LLM spend â€” it
 explains it, forecasts it, and proposes governed actions to cut it.**
 
 Runs entirely on synthetic data. No API keys, no cloud, no Docker.
@@ -14,7 +14,7 @@ uv sync && uv run streamlit run app.py
 That's it. First launch opens a fully populated dashboard with seeded cost
 stories to investigate.
 
-<!-- screenshot: docs/img/overview.png (added after first release) -->
+![Executive Overview](docs/img/overview.png)
 
 ## Why this exists
 
@@ -27,10 +27,10 @@ There is no lightweight, runnable reference for what the **full FinOps loop**
 looks like:
 
 ```
-OBSERVE → ANALYZE → DETECT → PREDICT → RECOMMEND → SIMULATE → GOVERN → AUTOMATE
+OBSERVE â†’ ANALYZE â†’ DETECT â†’ PREDICT â†’ RECOMMEND â†’ SIMULATE â†’ GOVERN â†’ AUTOMATE
 ```
 
-This repository is that reference — small enough to read in an afternoon,
+This repository is that reference â€” small enough to read in an afternoon,
 honest about every assumption, and safe to run anywhere because the entire
 environment is synthetic.
 
@@ -39,20 +39,20 @@ environment is synthetic.
 Most cost tools stop at charts. The interesting engineering here is the back
 half of the loop:
 
-1. **Explainable anomaly detection** — robust z-scores against weekday/weekend
-   baselines, no ML. Every flag reads like a sentence: *"app-triage spent 17.9×
+1. **Explainable anomaly detection** â€” robust z-scores against weekday/weekend
+   baselines, no ML. Every flag reads like a sentence: *"app-triage spent 17.9Ã—
    its trailing baseline on Sep 17. 96% of the increase came from atlas-ultra."*
-2. **What-if simulation** — counterfactual repricing of the trailing 30 days.
+2. **What-if simulation** â€” counterfactual repricing of the trailing 30 days.
    *"Move 100% of the summarizer from the frontier model to the mid-tier one"*
-   → exact savings, quality shift, latency shift, context-window warnings.
-3. **A governed autopilot** — five ordered policy rules classify every
+   â†’ exact savings, quality shift, latency shift, context-window warnings.
+3. **A governed autopilot** â€” five ordered policy rules classify every
    recommendation as `AUTO_APPROVE`, `REQUIRES_APPROVAL`, or `DO_NOT_AUTOMATE`.
    Auto-approved actions are re-verified through the simulator, humans approve
    or reject the rest (rejections require a reason), and everything lands in an
    append-only audit trail.
 
-The governance part is what enterprises actually struggle with — who approves
-a model swap? what's safe to automate? — and it's the part this project
+The governance part is what enterprises actually struggle with â€” who approves
+a model swap? what's safe to automate? â€” and it's the part this project
 demonstrates end to end.
 
 ## Honesty rules
@@ -66,7 +66,7 @@ demonstrates end to end.
   arithmetic and policy evaluation. There is no LLM inside the tool.
 - **Deterministic.** Same seed, same dataset, same detections, same decisions.
   The demo dataset ships with a logged ground-truth file of every injected
-  anomaly — the detector is tested against its own answer key.
+  anomaly â€” the detector is tested against its own answer key.
 
 ## The pages
 
@@ -98,7 +98,7 @@ models/      Pydantic entities
 tests/       105 tests, validated against injected ground truth
 ```
 
-Data flows one way: `generator → parquet → engines → UI`. Engines are pure
+Data flows one way: `generator â†’ parquet â†’ engines â†’ UI`. Engines are pure
 functions over the request DataFrame; the UI only renders. Details in
 [docs/architecture.md](docs/architecture.md).
 
@@ -110,7 +110,7 @@ uv run python -m generator.generate --days 50       # clean base traffic
 uv run python -m generator.generate --scale medium  # 10x volume
 ```
 
-Scenarios: `normal`, `cost_spike`, `budget_overrun`, `multi_anomaly` — see
+Scenarios: `normal`, `cost_spike`, `budget_overrun`, `multi_anomaly` â€” see
 `generator/scenarios.py`.
 
 ## Development
@@ -129,17 +129,17 @@ Python 3.12+. Plain pip works: `pip install -r requirements.txt`.
 The core is provider-agnostic by design: everything downstream of the parquet
 file only needs the request schema in `models/entities.py`. A future
 `UsageProvider` interface (OpenAI, Anthropic, Bedrock, Azure, LiteLLM, custom
-gateways) plugs in at ingestion without touching the engines — see
+gateways) plugs in at ingestion without touching the engines â€” see
 [docs/architecture.md](docs/architecture.md#extension-points).
 
 ## Roadmap
 
-- **v0.1** — everything above
-- **v0.2** — configurable policy rules (YAML), richer scenario library,
+- **v0.1** â€” everything above
+- **v0.2** â€” configurable policy rules (YAML), richer scenario library,
   per-workload routing recommendations
-- **v0.3** — `UsageProvider` interface + first real adapter (opt-in),
+- **v0.3** â€” `UsageProvider` interface + first real adapter (opt-in),
   cost-per-business-transaction modelling
-- **v1.0** — pluggable detectors, multi-currency, exportable reports
+- **v1.0** â€” pluggable detectors, multi-currency, exportable reports
 
 ## Contributing
 
