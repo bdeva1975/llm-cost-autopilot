@@ -2,7 +2,17 @@
 
 import streamlit as st
 
-from ui import anomalies_page, explorer, forecast_page, models_page, overview
+from ui import (
+    anomalies_page,
+    autopilot_page,
+    data_page,
+    explorer,
+    forecast_page,
+    models_page,
+    optimize_page,
+    overview,
+    whatif_page,
+)
 
 st.set_page_config(page_title="LLM Cost Autopilot", page_icon="🛩️", layout="wide")
 
@@ -12,6 +22,10 @@ pages = [
     st.Page(models_page.page, title="Model Economics", icon="⚖️", url_path="models"),
     st.Page(anomalies_page.page, title="Anomaly Center", icon="🚨", url_path="anomalies"),
     st.Page(forecast_page.page, title="Forecast", icon="📈", url_path="forecast"),
+    st.Page(optimize_page.page, title="Optimization Center", icon="💡", url_path="optimize"),
+    st.Page(whatif_page.page, title="What-If Simulator", icon="🧪", url_path="whatif"),
+    st.Page(autopilot_page.page, title="Autopilot", icon="🛩️", url_path="autopilot"),
+    st.Page(data_page.page, title="Data Explorer", icon="🗃️", url_path="data"),
 ]
 
 nav = st.navigation(pages)
