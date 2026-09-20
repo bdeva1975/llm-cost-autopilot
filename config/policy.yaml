@@ -1,10 +1,10 @@
 # Autopilot policy configuration.
 #
-# Only the auto-approval gate is configurable. The category -> verdict mapping
-# (token caps and retry fixes require approval; budget decisions are never
-# automated) is fixed in code deliberately: those are safety judgments, not
-# tuning knobs. See autopilot/policy.py for the schema and docs/autopilot.md
-# for the reasoning.
+# Only the auto-approval gate and the approval lifetime are configurable. The
+# category -> verdict mapping (token caps and retry fixes require approval;
+# budget decisions are never automated) is fixed in code deliberately: those
+# are safety judgments, not tuning knobs. See autopilot/policy.py for the
+# schema and docs/autopilot.md for the reasoning.
 
 version: 1
 
@@ -14,3 +14,9 @@ auto_approve:
   max_quality_risk: low      # low | medium  (high is never auto-approvable)
   min_savings_usd_30d: 0.50  # estimated savings over the trailing 30 days
   min_confidence: 0.60       # 0..1
+
+approvals:
+  # Approvals are predicates, not signatures: they record the conditions they
+  # were granted under and expire. revalidate_approvals() re-checks them
+  # against current data; failures mark the decision STALE.
+  valid_days: 30

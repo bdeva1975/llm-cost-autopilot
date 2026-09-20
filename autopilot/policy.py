@@ -1,9 +1,10 @@
 """Policy configuration for the autopilot.
 
-The auto-approval gate (risk ceiling, savings and confidence thresholds) is
-configurable via config/policy.yaml. The category -> verdict mapping is NOT
-configurable by design: allowing YAML to auto-approve output-shape changes,
-code changes or budget decisions would turn a guardrail into a footgun.
+The auto-approval gate (risk ceiling, savings and confidence thresholds) and
+the approval lifetime are configurable via config/policy.yaml. The category ->
+verdict mapping is NOT configurable by design: allowing YAML to auto-approve
+output-shape changes, code changes or budget decisions would turn a guardrail
+into a footgun.
 
 Defaults embedded here are identical to the committed config/policy.yaml and
 to the v0.1 hardcoded constants, so a missing file changes nothing.
@@ -43,11 +44,18 @@ class AutoApprovePolicy(BaseModel):
         return v
 
 
+class ApprovalsPolicy(BaseModel):
+    """Lifetime of granted approvals (auto and human)."""
+
+    valid_days: int = Field(default=30, ge=1)
+
+
 class PolicyConfig(BaseModel):
     """Top-level policy document."""
 
     version: int = 1
     auto_approve: AutoApprovePolicy = AutoApprovePolicy()
+    approvals: ApprovalsPolicy = ApprovalsPolicy()
 
 
 def load_policy(path: Path = DEFAULT_POLICY_PATH) -> PolicyConfig:
@@ -65,6 +73,7 @@ def load_policy(path: Path = DEFAULT_POLICY_PATH) -> PolicyConfig:
 def policy_rules(policy: PolicyConfig) -> list[tuple[str, str]]:
     """The ordered, human-readable rule list (shown verbatim in the UI)."""
     aa = policy.auto_approve
+    ap = policy.approvals
     return [
         (
             "R1-low-risk-routing",
@@ -84,4 +93,12 @@ def policy_rules(policy: PolicyConfig) -> list[tuple[str, str]]:
             "Retry/backoff optimizations are code changes; they always require human approval.",
         ),
         ("R5-budget-is-human", "Budget decisions are never automated; they are advisory only."),
+        (
+            "R6-approvals-are-predicates",
+            (
+                f"Approvals record the conditions they were granted under, expire after "
+                f"{ap.valid_days} days, and are revalidated against current data; failed "
+                f"guards mark the decision STALE."
+            ),
+        ),
     ]
